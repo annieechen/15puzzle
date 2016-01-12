@@ -25,6 +25,7 @@
 // constants
 #define DIM_MIN 3
 #define DIM_MAX 9
+#define ERROR -1
 
 // board
 int board[DIM_MAX][DIM_MAX];
@@ -32,13 +33,20 @@ int board[DIM_MAX][DIM_MAX];
 // dimensions
 int d;
 
-// prototypes
+// to avoid calculating square each time
+int total;
+// prototypes given
 void clear(void);
 void greet(void);
 void init(void);
 void draw(void);
 bool move(int tile);
 bool won(void);
+
+//prototypes from own functions
+void randomize(void);
+int search_row(int tile);
+int search_column(int tile);
 
 int main(int argc, string argv[])
 {
@@ -57,6 +65,10 @@ int main(int argc, string argv[])
             DIM_MIN, DIM_MIN, DIM_MAX, DIM_MAX);
         return 2;
     }
+    
+    // calculate max number on board
+    // NOTE: does this make sense to store? should d - 1 be stored too?
+    total = d * d - 1;
 
     // greet user with instructions
     greet();
@@ -76,7 +88,7 @@ int main(int argc, string argv[])
         // check for win
         if (won())
         {
-            printf("ftw!\n");
+            printf("Complete!\n");
             break;
         }
 
@@ -124,7 +136,19 @@ void greet(void)
  */
 void init(void)
 {
-    // TODO
+    int counter = 1;
+    for (int i = 0; i < d; i++)
+    {
+        for (int j = 0; j < d; j++)
+        {
+            board[i][j] = counter;
+            counter++; 
+        }
+    }
+    // turn bottom right corner to blank
+    board[d-1][d-1] = 0;
+
+    // then pass to randomize, which runs move tiles a certain number of times
 }
 
 /**
@@ -162,8 +186,62 @@ void draw(void)
  */
 bool move(int tile)
 {
-    // TODO
-    return false;
+    // make sure number of tile is within grid
+    if (tile < 1 || tile > (total)) 
+    {
+        return false;
+    }
+    else 
+    {
+        int row_start, col_start, row_goal, col_goal;
+        // search for coordinates of tile to be moved;
+        row_start = search_row(tile);
+        col_start = search_column(tile);
+        
+        // search for coordinates of blank tile
+        // NOTE: Does it make more sense to store global variables of the blank tile and update them each move? 
+        row_goal = search_row(0);
+        col_goal = search_column(0);
+        
+        // makes sure either row or column of tiles to be switched are the same
+        if (row_start == row_goal )
+        {
+            // checks that tiles to be swapped are adjacent
+            // if so, swaps their values
+            if ((col_start == (col_goal + 1)) || ((col_start == (col_goal - 1))))
+            {
+                board[row_start][col_start] = 0;
+                board[row_goal][col_goal] = tile;
+                return true;
+            }
+            // if not adjacent, move is illegal
+            else 
+            {
+                return false;
+            }
+        }
+        else if (col_start == col_goal)
+        {
+            // checks that tiles to be swapped are adjacent
+            // if so, swaps their values
+            if ((row_start == (row_goal + 1)) || ((row_start == (row_goal - 1))))
+            {
+                board[row_start][col_start] = 0;
+                board[row_goal][col_goal] = tile;
+                return true;
+            }
+            // if not adjacent, move is illegal
+            else 
+            {
+                return false;
+            }
+        }  
+        // if neither row nor column are the same, move cannot be completed
+        else 
+        {
+            return false;
+        }
+    }    
 }
 
 /**
@@ -172,7 +250,12 @@ bool move(int tile)
  */
 bool won(void)
 {
- int compare = 1;
+    // check to make sure bottom right corner is blank
+    if (board[d-1][d-1] != 0)
+    {
+        return false;
+    }
+    int compare = 1;
     for (int i = 0; i < d; i++)
     {
         for (int j = 0; j < d; j++) 
@@ -190,3 +273,44 @@ bool won(void)
     }
     return true;
 }
+// NOTE: perhaps an array with array[0] = row and array[1] = column makes more logical sense than searching through the array twice
+// however, would require malloc and global variable as pointer
+/**
+ * Given an int value, searches array for that value
+ * assumes that value is in the array (checked in move function)
+ * returns the row coordinate
+ */
+int search_row(int tile)
+{
+    for (int i = 0; i < d; i++)
+    {
+        for (int j = 0; j < d; j++)            
+        {
+            if (board[i][j] == tile) 
+            {
+                return i;
+            }
+        }
+    }
+    return ERROR;
+}
+/**
+ * Given an int value, searches array for that value
+ * assumes that value is in the array (checked in move function)
+ * returns the column coordinate
+ */
+int search_column(int tile)
+{
+    for (int i = 0; i < d; i++)
+    {
+        for (int j = 0; j < d; j++)            
+        {
+            if (board[i][j] == tile) 
+            {
+                return j;
+            }
+        }
+    }
+    return ERROR;
+}
+
