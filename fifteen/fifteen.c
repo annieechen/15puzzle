@@ -132,7 +132,28 @@ void init(void)
  */
 void draw(void)
 {
-    // TODO
+    // loops through array in rows, printing value at each spot
+    for (int i = 0; i < d; i++) 
+    {
+        for (int j = 0; j < d; j++)
+        {
+            // prints blank as an underscore
+            if (board[i][j] == 0)
+            {
+                printf(" _ ");
+            }
+            // prints single digit numbers with a space in front for spacing
+            else if (board[i][j] < 10)
+            {
+                printf(" %i ", board[i][j]);
+            }
+            else
+            {
+                printf("%i ", board[i][j]);
+            }    
+        }
+        printf("\n");
+    }
 }
 
 /**
