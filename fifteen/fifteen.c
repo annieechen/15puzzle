@@ -172,6 +172,21 @@ bool move(int tile)
  */
 bool won(void)
 {
-    // TODO
-    return false;
+ int compare = 1;
+    for (int i = 0; i < d; i++)
+    {
+        for (int j = 0; j < d; j++) 
+        {
+            if (compare == d * d)
+            {
+                return true;
+            }
+            if (board[i][j] != compare)
+            {
+                return false;
+            }
+                compare++;
+        }
+    }
+    return true;
 }
