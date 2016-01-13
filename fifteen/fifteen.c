@@ -138,16 +138,16 @@ void greet(void)
  */
 void init(void)
 {
-    int counter = 1;
-    for (int i = 0; i < d; i++)
-    {
-        for (int j = 0; j < d; j++)
-        {
-            board[i][j] = counter;
-            counter++; 
-        }
-    }
-    // turn bottom right corner to blank
+    // int counter = 1;
+    // for (int i = 0; i < d; i++)
+    // {
+    //     for (int j = 0; j < d; j++)
+    //     {
+    //         board[i][j] = counter;
+    //         counter++; 
+    //     }
+    // }
+    // // turn bottom right corner to blank
     board[d-1][d-1] = 0;
     // then pass to randomize
     randomize();
@@ -160,62 +160,106 @@ void randomize(void)
 {
     // seed drand
     srand48(time(NULL));
+
     // first let's make a 1-dimensional array of length d^2 - 1 and initialize it to be
     // equivalent to the "solved" configuration
-    // int flat_board[d*d - 1];
-    // for (int i = 0; i < d*d - 1; i++){
-    //     flat_board[i] = i;
-    // }
- 
+    printf("We come in peace");
+    int flat_board[total];
+    for (int i = 0; i < total; i++){
+        flat_board[i] = i+1;
+        printf("%d ", flat_board[i]);
+    }
+    printf("\n");
+
     // based on wikipedia example of Fisher-Yates Shuffle
     // https://en.wikipedia.org/wiki/Fisher–Yates_shuffle
-    //
-
-
-
-
-
-    int row_start, col_start, row_goal, col_goal;
-    for (int counter = total; counter > 0; counter--)
-    {
-        int randt = (drand48() * total);
-        row_start = counter / d;
-        col_start = counter % d;
-        row_goal = randt / d;
-        col_goal = randt % d;
-        swap(row_start, col_start, row_goal, col_goal);
+    int foo;
+    for (int counter = total; counter > 0; counter--){
+        int randt = (drand48() * (counter+1));
+        foo = flat_board[counter];
+        flat_board[counter] = flat_board[randt];
+        flat_board[randt] = foo;
     }
-    // turn bottom right corner to blank
-    board[d-1][d-1] = 0;
+
     // check for solvability
     // uses information from 
     // https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
-    // turn 2 by 2 array into 1 dimensional array
-    int flat_board[d * d];
-    for (int i = 0; i < d; i++)
-    {
-        for (int j = 0; j < d; j++)
-        {
-            flat_board [(i * d) + j]= board[i][j]; 
-        }
-    }
-    // count number of inversions
-    // ignores last element in array (guaranteed to be 0)
     int inversions = 0;
-    for (int i = 0; i < d * d; i++)
-    {
-        int temp = flat_board[i];
-        for (int j = i + 1; j < d * d; j++)
-        {
-            if(flat_board[j] != 0)
-            {
-                if(temp > flat_board[j])
-                {
-                    inversions++;
-                }
+    int checking;
+    for (int i = 0; i < total - 1; i++){
+        checking = flat_board[i];
+        // if (checking == 0) {
+        //     printf("%d %d\n", checking, i);
+        // }
+        for (int j = i + 1; j < total; j++){
+            if (flat_board[j] < checking){
+                inversions++;
             }
         }
     }
+
+    // we're always placing the blank tile on the bottom right, so for this to be solvable,
+    // if the board width is odd, inversions must be even
+    // if the board width is even, inversions must be even
+    // hey this makes it easy, we just need to adjust if inversions is odd
+
+    // so switching the first two elements switches the parity of inversions,
+    // and I believe it makes a 1-1 mapping of solvable and non-solvable configurations,
+    // so this shouldn't interfere with randomness of the shuffle
+    if (inversions % 2 != 0){
+        foo = flat_board[0];
+        flat_board[0] = flat_board[1];
+        flat_board[1] = foo;
+    }
+
+    // now we just need to wrap the flat board onto the global board
+    for (int i = 0; i < d; i++){
+        for (int j = 0; j < d; j++){
+            if(i < d-1 || j < d-1){
+                board[i][j] = flat_board[i*d + j];
+            }
+        }
+    }
+
+    // int row_start, col_start, row_goal, col_goal;
+    // for (int counter = total; counter > 0; counter--)
+    // {
+    //     int randt = (drand48() * total);
+    //     row_start = counter / d;
+    //     col_start = counter % d;
+    //     row_goal = randt / d;
+    //     col_goal = randt % d;
+    //     swap(row_start, col_start, row_goal, col_goal);
+    // }
+    // // turn bottom right corner to blank
+    // board[d-1][d-1] = 0;
+
+    // // turn 2 by 2 array into 1 dimensional array
+    // int flat_board[d * d];
+    // for (int i = 0; i < d; i++)
+    // {
+    //     for (int j = 0; j < d; j++)
+    //     {
+    //         flat_board [(i * d) + j]= board[i][j]; 
+    //     }
+    // }
+    // // count number of inversions
+    // // ignores last element in array (guaranteed to be 0)
+    // int inversions = 0;
+    // for (int i = 0; i < d * d; i++)
+    // {
+    //     int temp = flat_board[i];
+    //     for (int j = i + 1; j < d * d; j++)
+    //     {
+    //         if(flat_board[j] != 0)
+    //         {
+    //             if(temp > flat_board[j])
+    //             {
+    //                 inversions++;
+    //             }
+    //         }
+    //     }
+    // }
 }    
 /**
  * Prints the board in its current state.
