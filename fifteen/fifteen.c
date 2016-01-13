@@ -173,7 +173,8 @@ void randomize(void)
         col_goal = randt % d;
         swap(row_start, col_start, row_goal, col_goal);
     }
-    
+    // turn bottom right corner to blank
+    board[d-1][d-1] = 0;
     // check for solvability
     // uses information from 
     // https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
@@ -187,6 +188,7 @@ void randomize(void)
         }
     }
     // count number of inversions
+    // ignores last element in array (guaranteed to be 0)
     int inversions = 0;
     for (int i = 0; i < d * d; i++)
     {
