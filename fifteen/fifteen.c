@@ -46,7 +46,7 @@ bool won(void);
 
 //prototypes from own functions
 void randomize(void);
-void swap(int row_start, int col_start, int row_goal, int col_goal);
+void swap(int start_index, int goal_index);
 int search(int tile);
 int search_column(int tile);
 
@@ -77,7 +77,6 @@ int main(int argc, string argv[])
 
     // initialize the board
     init();
-
     // accept moves until game is won
     while (true)
     {
@@ -163,19 +162,16 @@ void randomize(void)
 
     // first let's make a 1-dimensional array of length d^2 - 1 and initialize it to be
     // equivalent to the "solved" configuration
-    printf("We come in peace");
     int flat_board[total];
     for (int i = 0; i < total; i++){
         flat_board[i] = i+1;
-        printf("%d ", flat_board[i]);
     }
-    printf("\n");
 
     // based on wikipedia example of Fisher-Yates Shuffle
     // https://en.wikipedia.org/wiki/Fisher–Yates_shuffle
     int foo;
-    for (int counter = total; counter > 0; counter--){
-        int randt = (drand48() * (counter+1));
+    for (int counter = total-1; counter > 0; counter--){
+        int randt = (drand48() * (counter + 1));
         foo = flat_board[counter];
         flat_board[counter] = flat_board[randt];
         flat_board[randt] = foo;
@@ -303,58 +299,60 @@ bool move(int tile)
     }
     else 
     {
-        int row_start, col_start, row_goal, col_goal, result;
+        int start_index, goal_index;
         // search for coordinates of tile to be moved;
-        result = search(tile);
+        start_index = search(tile);
 
-        col_start = result % d;
-        row_start = (result - col_start)/d;
-        
         // search for coordinates of blank tile
         // NOTE: Does it make more sense to store global variables of the blank tile and update them each move? 
         // Not sure about this ^ but updated this to an improved search
-        result = search(0);
+        goal_index = search(0);
+        printf("%d %d\n", start_index, goal_index);
 
-        col_goal = result % d;
-        row_goal = (result - col_start)/d;
-        printf("%d\n", result);
-        printf("%d %d %d %d\n", row_start, col_start, row_goal, col_goal);
-        // makes sure either row or column of tiles to be switched are the same
-        if (row_start == row_goal )
-        {
-            // checks that tiles to be swapped are adjacent
-            // if so, swaps their values
-            if ((col_start == (col_goal + 1)) || ((col_start == (col_goal - 1))))
-            {
-                swap(row_start, col_start, row_goal, col_goal);
-                return true;
-            }
-            // if not adjacent, move is illegal
-            else 
-            {
-                return false;
-            }
+        if (abs(2 * abs(start_index - goal_index) - 5) == 3){
+            swap(start_index, goal_index);
+            return true;
         }
-        else if (col_start == col_goal)
-        {
-            // checks that tiles to be swapped are adjacent
-            // if so, swaps their values
-            if ((row_start == (row_goal + 1)) || ((row_start == (row_goal - 1))))
-            {
-                swap(row_start, col_start, row_goal, col_goal);
-                return true;
-            }
-            // if not adjacent, move is illegal
-            else 
-            {
-                return false;
-            }
-        }  
-        // if neither row nor column are the same, move cannot be completed
-        else 
-        {
+        else{
             return false;
         }
+
+        // makes sure either row or column of tiles to be switched are the same
+        // if (row_start == row_goal )
+        // {
+        //     // checks that tiles to be swapped are adjacent
+        //     // if so, swaps their values
+        //     if ((col_start == (col_goal + 1)) || ((col_start == (col_goal - 1))))
+        //     {
+        //         swap(row_start, col_start, row_goal, col_goal);
+        //         return true;
+        //     }
+        //     // if not adjacent, move is illegal
+        //     else 
+        //     {
+        //         return false;
+        //     }
+        // }
+        // else if (col_start == col_goal)
+        // {
+        //     // checks that tiles to be swapped are adjacent
+        //     // if so, swaps their values
+        //     if ((row_start == (row_goal + 1)) || ((row_start == (row_goal - 1))))
+        //     {
+        //         swap(row_start, col_start, row_goal, col_goal);
+        //         return true;
+        //     }
+        //     // if not adjacent, move is illegal
+        //     else 
+        //     {
+        //         return false;
+        //     }
+        // }  
+        // // if neither row nor column are the same, move cannot be completed
+        // else 
+        // {
+        //     return false;
+        // }
     }    
 }
 
@@ -392,8 +390,18 @@ bool won(void)
  * given the locations of two tiles, swaps the tiles
  * modifies global variable board
  */
-void swap(int row_start, int col_start, int row_goal, int col_goal)
-{
+// void swap(int row_start, int col_start, int row_goal, int col_goal)
+// {
+//     int temp = board[row_start][col_start];
+//     board[row_start][col_start] = board[row_goal][col_goal];
+//     board[row_goal][col_goal] = temp;
+// }
+
+void swap(int start_index, int goal_index){
+    int col_start = start_index % d;
+    int col_goal = goal_index % d;
+    int row_start = (start_index - col_start)/d;
+    int row_goal = (goal_index - col_goal)/d;
     int temp = board[row_start][col_start];
     board[row_start][col_start] = board[row_goal][col_goal];
     board[row_goal][col_goal] = temp;
