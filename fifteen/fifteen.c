@@ -47,7 +47,7 @@ bool won(void);
 //prototypes from own functions
 void randomize(void);
 void swap(int row_start, int col_start, int row_goal, int col_goal);
-int search_row(int tile);
+int search(int tile);
 int search_column(int tile);
 
 int main(int argc, string argv[])
@@ -160,9 +160,21 @@ void randomize(void)
 {
     // seed drand
     srand48(time(NULL));
+    // first let's make a 1-dimensional array of length d^2 - 1 and initialize it to be
+    // equivalent to the "solved" configuration
+    // int flat_board[d*d - 1];
+    // for (int i = 0; i < d*d - 1; i++){
+    //     flat_board[i] = i;
+    // }
+ 
     // based on wikipedia example of Fisher-Yates Shuffle
     // https://en.wikipedia.org/wiki/Fisher–Yates_shuffle
-    // 
+    //
+
+
+
+
+
     int row_start, col_start, row_goal, col_goal;
     for (int counter = total; counter > 0; counter--)
     {
@@ -247,16 +259,22 @@ bool move(int tile)
     }
     else 
     {
-        int row_start, col_start, row_goal, col_goal;
+        int row_start, col_start, row_goal, col_goal, result;
         // search for coordinates of tile to be moved;
-        row_start = search_row(tile);
-        col_start = search_column(tile);
+        result = search(tile);
+
+        col_start = result % d;
+        row_start = (result - col_start)/d;
         
         // search for coordinates of blank tile
         // NOTE: Does it make more sense to store global variables of the blank tile and update them each move? 
-        row_goal = search_row(0);
-        col_goal = search_column(0);
-        
+        // Not sure about this ^ but updated this to an improved search
+        result = search(0);
+
+        col_goal = result % d;
+        row_goal = (result - col_start)/d;
+        printf("%d\n", result);
+        printf("%d %d %d %d\n", row_start, col_start, row_goal, col_goal);
         // makes sure either row or column of tiles to be switched are the same
         if (row_start == row_goal )
         {
@@ -337,14 +355,14 @@ void swap(int row_start, int col_start, int row_goal, int col_goal)
     board[row_goal][col_goal] = temp;
 }
 
-// NOTE: perhaps an array with array[0] = row and array[1] = column makes more logical sense than searching through the array twice
-// however, would require malloc and global variable as pointer
+// NOTE: condensed search_row and search_col into one function that returns one int equal to (row * d) + column
+// This works because row, column < d for all valid positions
 /**
  * Given an int value, searches array for that value
  * assumes that value is in the array (checked in move function)
  * returns the row coordinate
  */
-int search_row(int tile)
+int search(int tile)
 {
     for (int i = 0; i < d; i++)
     {
@@ -352,26 +370,7 @@ int search_row(int tile)
         {
             if (board[i][j] == tile) 
             {
-                return i;
-            }
-        }
-    }
-    return ERROR;
-}
-/**
- * Given an int value, searches array for that value
- * assumes that value is in the array (checked in move function)
- * returns the column coordinate
- */
-int search_column(int tile)
-{
-    for (int i = 0; i < d; i++)
-    {
-        for (int j = 0; j < d; j++)            
-        {
-            if (board[i][j] == tile) 
-            {
-                return j;
+                return d * i + j;
             }
         }
     }
