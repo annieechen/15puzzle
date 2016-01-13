@@ -149,30 +149,45 @@ void init(void)
     }
     // turn bottom right corner to blank
     board[d-1][d-1] = 0;
-    board[0][0] = 4;
-    // then pass to randomize, which runs move tiles a certain number of times
+    // then pass to randomize
+    randomize();
 }
 
 /**
  * swaps random tiles and then checks for solvability
  */
-void randomize(void);
+void randomize(void)
 {
     // seed drand
-    srand48((long int) time(NULL));
+    srand48(time(NULL));
     // based on wikipedia example of Fisher-Yates Shuffle
-    // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#Modern_method
-    // numbers from 1 to total, swap random and total
-    int counter = 1;
-    int chosen_tile;
+    // https://en.wikipedia.org/wiki/Fisher–Yates_shuffle
+    // 
+    int row_start, col_start, row_goal, col_goal;
     for (int counter = total; counter > 0; counter--)
     {
-        // choose random number from 1 to counter
-        // how to make this not have 0 as possibility?
-        chosen_tile = rand()% counter
-        // swap counter and chosen tile
-        
+        int randt = (drand48() * total);
+        row_start = counter / d;
+        col_start = counter % d;
+        row_goal = randt / d;
+        col_goal = randt % d;
+        swap(row_start, col_start, row_goal, col_goal);
     }
+    
+    // check for solvability
+    // uses information from 
+    // https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
+    // turn 2 by 2 array into 1 dimensional array
+    int flat_board[d * d];
+    for (int i = 0; i < d; i++)
+    {
+        for (int j = 0; j < d; j++)
+        {
+            flat_board [(i * d) + j]= [board[i][j] 
+        }
+    }
+    // count number of inversions
+    
 }    
 /**
  * Prints the board in its current state.
