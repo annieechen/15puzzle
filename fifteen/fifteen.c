@@ -17,11 +17,13 @@
  
 #define _XOPEN_SOURCE 500
 
-#include <cs50.h>
+#include "cs50.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <string.h>
 
 // constants
 #define DIM_MIN 3
@@ -156,7 +158,7 @@ void init(void)
 /**
  * swaps random tiles and then checks for solvability
  */
-void randomize(void);
+void randomize(void)
 {
     // seed drand
     srand48((long int) time(NULL));
@@ -169,7 +171,7 @@ void randomize(void);
     {
         // choose random number from 1 to counter
         // how to make this not have 0 as possibility?
-        chosen_tile = rand()% counter
+        chosen_tile = rand()% counter;
         // swap counter and chosen tile
         
     }
