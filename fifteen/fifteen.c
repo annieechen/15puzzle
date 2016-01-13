@@ -17,11 +17,13 @@
  
 #define _XOPEN_SOURCE 500
 
-#include <cs50.h>
+#include "cs50.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <string.h>
 
 // constants
 #define DIM_MIN 3
@@ -166,12 +168,20 @@ void randomize(void)
     int row_start, col_start, row_goal, col_goal;
     for (int counter = total; counter > 0; counter--)
     {
+<<<<<<< HEAD
+        // choose random number from 1 to counter
+        // how to make this not have 0 as possibility?
+        chosen_tile = rand()% counter;
+        // swap counter and chosen tile
+        
+=======
         int randt = (drand48() * total);
         row_start = counter / d;
         col_start = counter % d;
         row_goal = randt / d;
         col_goal = randt % d;
         swap(row_start, col_start, row_goal, col_goal);
+>>>>>>> 4de0cd4165c5461a3d232e7d2bbf8f087bbaf152
     }
     // turn bottom right corner to blank
     board[d-1][d-1] = 0;
