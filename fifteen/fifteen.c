@@ -183,11 +183,25 @@ void randomize(void)
     {
         for (int j = 0; j < d; j++)
         {
-            flat_board [(i * d) + j]= [board[i][j] 
+            flat_board [(i * d) + j]= board[i][j]; 
         }
     }
     // count number of inversions
-    
+    int inversions = 0;
+    for (int i = 0; i < d * d; i++)
+    {
+        int temp = flat_board[i];
+        for (int j = i + 1; j < d * d; j++)
+        {
+            if(flat_board[j] != 0)
+            {
+                if(temp > flat_board[j])
+                {
+                    inversions++;
+                }
+            }
+        }
+    }
 }    
 /**
  * Prints the board in its current state.
