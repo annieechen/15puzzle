@@ -48,7 +48,7 @@ bool won(void);
 void randomize(void);
 void swap(int start_index, int goal_index);
 int search(int tile);
-int search_column(int tile);
+void god(void);
 
 int main(int argc, string argv[])
 {
@@ -315,53 +315,57 @@ bool move(int tile)
         else{
             return false;
         }
-
-        // makes sure either row or column of tiles to be switched are the same
-        // if (row_start == row_goal )
-        // {
-        //     // checks that tiles to be swapped are adjacent
-        //     // if so, swaps their values
-        //     if ((col_start == (col_goal + 1)) || ((col_start == (col_goal - 1))))
-        //     {
-        //         swap(row_start, col_start, row_goal, col_goal);
-        //         return true;
-        //     }
-        //     // if not adjacent, move is illegal
-        //     else 
-        //     {
-        //         return false;
-        //     }
-        // }
-        // else if (col_start == col_goal)
-        // {
-        //     // checks that tiles to be swapped are adjacent
-        //     // if so, swaps their values
-        //     if ((row_start == (row_goal + 1)) || ((row_start == (row_goal - 1))))
-        //     {
-        //         swap(row_start, col_start, row_goal, col_goal);
-        //         return true;
-        //     }
-        //     // if not adjacent, move is illegal
-        //     else 
-        //     {
-        //         return false;
-        //     }
-        // }  
-        // // if neither row nor column are the same, move cannot be completed
-        // else 
-        // {
-        //     return false;
-        // }
     }    
 }
 
+/**
+ * Outdated move function (uses 2 d locations)
+ * 
+    //makes sure either row or column of tiles to be switched are the same
+     if (row_start == row_goal )
+    {
+    //      checks that tiles to be swapped are adjacent
+          if so, swaps their values
+         if ((col_start == (col_goal + 1)) || ((col_start == (col_goal - 1))))
+         {
+             swap(row_start, col_start, row_goal, col_goal);
+             return true;
+         }
+          if not adjacent, move is illegal
+         else 
+         {
+             return false;
+         }
+     }
+     else if (col_start == col_goal)
+     {
+          checks that tiles to be swapped are adjacent
+          if so, swaps their values
+         if ((row_start == (row_goal + 1)) || ((row_start == (row_goal - 1))))
+         {
+             swap(row_start, col_start, row_goal, col_goal);
+             return true;
+         }
+          if not adjacent, move is illegal
+         else 
+         {
+             return false;
+         }
+     }  
+      if neither row nor column are the same, move cannot be completed
+     else 
+     {
+         return false;
+     }
+     
+*/
 /**
  * Returns true if game is won (i.e., board is in winning configuration), 
  * else false.
  */
 bool won(void)
 {
-    // check to make sure bottom right corner is blank
+    //check to make sure bottom right corner is blank
     if (board[d-1][d-1] != 0)
     {
         return false;
@@ -388,13 +392,15 @@ bool won(void)
 /**
  * given the locations of two tiles, swaps the tiles
  * modifies global variable board
- */
-// void swap(int row_start, int col_start, int row_goal, int col_goal)
-// {
-//     int temp = board[row_start][col_start];
-//     board[row_start][col_start] = board[row_goal][col_goal];
-//     board[row_goal][col_goal] = temp;
-// }
+ * old swap was with 2d locations
+ *
+ void swap(int row_start, int col_start, int row_goal, int col_goal)
+{
+ int temp = board[row_start][col_start];
+ board[row_start][col_start] = board[row_goal][col_goal];
+ board[row_goal][col_goal] = temp;
+}
+*/
 
 void swap(int start_index, int goal_index){
     int col_start = start_index % d;
@@ -408,6 +414,7 @@ void swap(int start_index, int goal_index){
 
 // NOTE: condensed search_row and search_col into one function that returns one int equal to (row * d) + column
 // This works because row, column < d for all valid positions
+// @Dennis: I actually think it might have made more sense to change variables on the heap, rather than always converting
 /**
  * Given an int value, searches array for that value
  * assumes that value is in the array (checked in move function)
@@ -426,4 +433,76 @@ int search(int tile)
         }
     }
     return ERROR;
+}
+
+/** solves the puzzle
+ * uses information from 
+ * http://larc.unt.edu/ian/pubs/saml.pdf
+ * 
+ * actually I think this ppt gives more detail
+ * http://msemac.redwoods.edu/~darnold/math45/laproj/f09/bishopmadsen/SamLoydSlides.pdf
+ * but says on pg 47 there is a configuration that cannot be solved
+ */
+
+void god(void)
+{
+    // if n = 3 solve by brute force
+    // need a way to 
+}
+// all god moves check if possible
+// moves blank to the right
+bool god_right(void)
+{
+    int blank_index= search(0);
+    if ((blank_index % d) != (d - 1))
+    {
+        swap(blank_index, (blank_index + 1));
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+// moves blank to the left
+bool god_left(void)
+{
+    int blank_index= search(0);
+    if (blank_index % d != 0)
+    {
+        swap(blank_index, (blank_index - 1));
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+// moves blank up
+bool god_up(void)
+{
+    int blank_index= search(0);
+    if (blank_index > d)
+    {
+        swap(blank_index, (blank_index - d));
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+// moves blank down
+bool god_down(void)
+{
+    int blank_index= search(0);
+    if ((blank_index / d) != (d - 1))
+    {
+        swap(blank_index, (blank_index + d));
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
