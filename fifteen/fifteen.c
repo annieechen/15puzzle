@@ -177,39 +177,6 @@ void randomize(void)
         flat_board[randt] = foo;
     }
 
-    // turn bottom right corner to blank
-    board[d-1][d-1] = 0;
-    // check for solvability
-    // uses information from 
-    // https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
-    // turn 2 by 2 array into 1 dimensional array
-    int flat_board[d * d];
-    for (int i = 0; i < d; i++)
-    {
-        for (int j = 0; j < d; j++)
-        {
-            flat_board [(i * d) + j]= board[i][j]; 
-        }
-    }
-    // count number of inversions
-    // ignores last element in array (guaranteed to be 0)
-    int inversions = 0;
-    for (int i = 0; i < d * d; i++)
-    {
-        int temp = flat_board[i];
-        for (int j = i + 1; j < d * d; j++)
-        {
-            if(flat_board[j] != 0)
-            {
-                if(temp > flat_board[j])
-                {
-                    inversions++;
-                }
-            }
-        }
-    }
-=======
-
     // check for solvability
     // uses information from 
     // https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
@@ -289,7 +256,6 @@ void randomize(void)
     //         }
     //     }
     // }
->>>>>>> 010d4f4250594d650290f0a61acb09028c5416a7
 }    
 /**
  * Prints the board in its current state.
