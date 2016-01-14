@@ -309,7 +309,7 @@ bool move(int tile)
         goal_index = search(0);
         printf("%d %d\n", start_index, goal_index);
 
-        if (abs(2 * abs(start_index - goal_index) - 5) == 3){
+        if (abs(2 * abs(start_index - goal_index) - (d+1)) == (d-1)){
             swap(start_index, goal_index);
             return true;
         }
