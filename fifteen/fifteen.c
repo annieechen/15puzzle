@@ -17,7 +17,7 @@
  
 #define _XOPEN_SOURCE 500
 
-#include <cs50.h>
+#include "cs50.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -46,8 +46,8 @@ bool won(void);
 
 //prototypes from own functions
 void randomize(void);
-void swap(int row_start, int col_start, int row_goal, int col_goal);
-int search_row(int tile);
+void swap(int start_index, int goal_index);
+int search(int tile);
 int search_column(int tile);
 
 int main(int argc, string argv[])
@@ -77,7 +77,6 @@ int main(int argc, string argv[])
 
     // initialize the board
     init();
-
     // accept moves until game is won
     while (true)
     {
@@ -138,16 +137,16 @@ void greet(void)
  */
 void init(void)
 {
-    int counter = 1;
-    for (int i = 0; i < d; i++)
-    {
-        for (int j = 0; j < d; j++)
-        {
-            board[i][j] = counter;
-            counter++; 
-        }
-    }
-    // turn bottom right corner to blank
+    // int counter = 1;
+    // for (int i = 0; i < d; i++)
+    // {
+    //     for (int j = 0; j < d; j++)
+    //     {
+    //         board[i][j] = counter;
+    //         counter++; 
+    //     }
+    // }
+    // // turn bottom right corner to blank
     board[d-1][d-1] = 0;
     // then pass to randomize
     randomize();
@@ -160,19 +159,24 @@ void randomize(void)
 {
     // seed drand
     srand48(time(NULL));
+
+    // first let's make a 1-dimensional array of length d^2 - 1 and initialize it to be
+    // equivalent to the "solved" configuration
+    int flat_board[total];
+    for (int i = 0; i < total; i++){
+        flat_board[i] = i+1;
+    }
+
     // based on wikipedia example of Fisher-Yates Shuffle
     // https://en.wikipedia.org/wiki/Fisher–Yates_shuffle
-    // 
-    int row_start, col_start, row_goal, col_goal;
-    for (int counter = total; counter > 0; counter--)
-    {
-        int randt = (drand48() * total);
-        row_start = counter / d;
-        col_start = counter % d;
-        row_goal = randt / d;
-        col_goal = randt % d;
-        swap(row_start, col_start, row_goal, col_goal);
+    int foo;
+    for (int counter = total-1; counter > 0; counter--){
+        int randt = (drand48() * (counter + 1));
+        foo = flat_board[counter];
+        flat_board[counter] = flat_board[randt];
+        flat_board[randt] = foo;
     }
+
     // turn bottom right corner to blank
     board[d-1][d-1] = 0;
     // check for solvability
@@ -204,6 +208,88 @@ void randomize(void)
             }
         }
     }
+=======
+
+    // check for solvability
+    // uses information from 
+    // https://www.cs.bham.ac.uk/~mdr/teaching/modules04/java2/TilesSolvability.html
+    int inversions = 0;
+    int checking;
+    for (int i = 0; i < total - 1; i++){
+        checking = flat_board[i];
+        // if (checking == 0) {
+        //     printf("%d %d\n", checking, i);
+        // }
+        for (int j = i + 1; j < total; j++){
+            if (flat_board[j] < checking){
+                inversions++;
+            }
+        }
+    }
+
+    // we're always placing the blank tile on the bottom right, so for this to be solvable,
+    // if the board width is odd, inversions must be even
+    // if the board width is even, inversions must be even
+    // hey this makes it easy, we just need to adjust if inversions is odd
+
+    // so switching the first two elements switches the parity of inversions,
+    // and I believe it makes a 1-1 mapping of solvable and non-solvable configurations,
+    // so this shouldn't interfere with randomness of the shuffle
+    if (inversions % 2 != 0){
+        foo = flat_board[0];
+        flat_board[0] = flat_board[1];
+        flat_board[1] = foo;
+    }
+
+    // now we just need to wrap the flat board onto the global board
+    for (int i = 0; i < d; i++){
+        for (int j = 0; j < d; j++){
+            if(i < d-1 || j < d-1){
+                board[i][j] = flat_board[i*d + j];
+            }
+        }
+    }
+
+    // int row_start, col_start, row_goal, col_goal;
+    // for (int counter = total; counter > 0; counter--)
+    // {
+    //     int randt = (drand48() * total);
+    //     row_start = counter / d;
+    //     col_start = counter % d;
+    //     row_goal = randt / d;
+    //     col_goal = randt % d;
+    //     swap(row_start, col_start, row_goal, col_goal);
+    // }
+    // // turn bottom right corner to blank
+    // board[d-1][d-1] = 0;
+
+    // // turn 2 by 2 array into 1 dimensional array
+    // int flat_board[d * d];
+    // for (int i = 0; i < d; i++)
+    // {
+    //     for (int j = 0; j < d; j++)
+    //     {
+    //         flat_board [(i * d) + j]= board[i][j]; 
+    //     }
+    // }
+    // // count number of inversions
+    // // ignores last element in array (guaranteed to be 0)
+    // int inversions = 0;
+    // for (int i = 0; i < d * d; i++)
+    // {
+    //     int temp = flat_board[i];
+    //     for (int j = i + 1; j < d * d; j++)
+    //     {
+    //         if(flat_board[j] != 0)
+    //         {
+    //             if(temp > flat_board[j])
+    //             {
+    //                 inversions++;
+    //             }
+    //         }
+    //     }
+    // }
+>>>>>>> 010d4f4250594d650290f0a61acb09028c5416a7
 }    
 /**
  * Prints the board in its current state.
@@ -247,52 +333,59 @@ bool move(int tile)
     }
     else 
     {
-        int row_start, col_start, row_goal, col_goal;
+        int start_index, goal_index;
         // search for coordinates of tile to be moved;
-        row_start = search_row(tile);
-        col_start = search_column(tile);
-        
+        start_index = search(tile);
+
         // search for coordinates of blank tile
         // NOTE: Does it make more sense to store global variables of the blank tile and update them each move? 
-        row_goal = search_row(0);
-        col_goal = search_column(0);
-        
-        // makes sure either row or column of tiles to be switched are the same
-        if (row_start == row_goal )
-        {
-            // checks that tiles to be swapped are adjacent
-            // if so, swaps their values
-            if ((col_start == (col_goal + 1)) || ((col_start == (col_goal - 1))))
-            {
-                swap(row_start, col_start, row_goal, col_goal);
-                return true;
-            }
-            // if not adjacent, move is illegal
-            else 
-            {
-                return false;
-            }
+        // Not sure about this ^ but updated this to an improved search
+        goal_index = search(0);
+
+        if (abs(2 * abs(start_index - goal_index) - (d+1)) == (d-1)){
+            swap(start_index, goal_index);
+            return true;
         }
-        else if (col_start == col_goal)
-        {
-            // checks that tiles to be swapped are adjacent
-            // if so, swaps their values
-            if ((row_start == (row_goal + 1)) || ((row_start == (row_goal - 1))))
-            {
-                swap(row_start, col_start, row_goal, col_goal);
-                return true;
-            }
-            // if not adjacent, move is illegal
-            else 
-            {
-                return false;
-            }
-        }  
-        // if neither row nor column are the same, move cannot be completed
-        else 
-        {
+        else{
             return false;
         }
+
+        // makes sure either row or column of tiles to be switched are the same
+        // if (row_start == row_goal )
+        // {
+        //     // checks that tiles to be swapped are adjacent
+        //     // if so, swaps their values
+        //     if ((col_start == (col_goal + 1)) || ((col_start == (col_goal - 1))))
+        //     {
+        //         swap(row_start, col_start, row_goal, col_goal);
+        //         return true;
+        //     }
+        //     // if not adjacent, move is illegal
+        //     else 
+        //     {
+        //         return false;
+        //     }
+        // }
+        // else if (col_start == col_goal)
+        // {
+        //     // checks that tiles to be swapped are adjacent
+        //     // if so, swaps their values
+        //     if ((row_start == (row_goal + 1)) || ((row_start == (row_goal - 1))))
+        //     {
+        //         swap(row_start, col_start, row_goal, col_goal);
+        //         return true;
+        //     }
+        //     // if not adjacent, move is illegal
+        //     else 
+        //     {
+        //         return false;
+        //     }
+        // }  
+        // // if neither row nor column are the same, move cannot be completed
+        // else 
+        // {
+        //     return false;
+        // }
     }    
 }
 
@@ -330,21 +423,31 @@ bool won(void)
  * given the locations of two tiles, swaps the tiles
  * modifies global variable board
  */
-void swap(int row_start, int col_start, int row_goal, int col_goal)
-{
+// void swap(int row_start, int col_start, int row_goal, int col_goal)
+// {
+//     int temp = board[row_start][col_start];
+//     board[row_start][col_start] = board[row_goal][col_goal];
+//     board[row_goal][col_goal] = temp;
+// }
+
+void swap(int start_index, int goal_index){
+    int col_start = start_index % d;
+    int col_goal = goal_index % d;
+    int row_start = (start_index - col_start)/d;
+    int row_goal = (goal_index - col_goal)/d;
     int temp = board[row_start][col_start];
     board[row_start][col_start] = board[row_goal][col_goal];
     board[row_goal][col_goal] = temp;
 }
 
-// NOTE: perhaps an array with array[0] = row and array[1] = column makes more logical sense than searching through the array twice
-// however, would require malloc and global variable as pointer
+// NOTE: condensed search_row and search_col into one function that returns one int equal to (row * d) + column
+// This works because row, column < d for all valid positions
 /**
  * Given an int value, searches array for that value
  * assumes that value is in the array (checked in move function)
  * returns the row coordinate
  */
-int search_row(int tile)
+int search(int tile)
 {
     for (int i = 0; i < d; i++)
     {
@@ -352,29 +455,9 @@ int search_row(int tile)
         {
             if (board[i][j] == tile) 
             {
-                return i;
+                return d * i + j;
             }
         }
     }
     return ERROR;
 }
-/**
- * Given an int value, searches array for that value
- * assumes that value is in the array (checked in move function)
- * returns the column coordinate
- */
-int search_column(int tile)
-{
-    for (int i = 0; i < d; i++)
-    {
-        for (int j = 0; j < d; j++)            
-        {
-            if (board[i][j] == tile) 
-            {
-                return j;
-            }
-        }
-    }
-    return ERROR;
-}
-
