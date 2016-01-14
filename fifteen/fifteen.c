@@ -307,7 +307,6 @@ bool move(int tile)
         // NOTE: Does it make more sense to store global variables of the blank tile and update them each move? 
         // Not sure about this ^ but updated this to an improved search
         goal_index = search(0);
-        printf("%d %d\n", start_index, goal_index);
 
         if (abs(2 * abs(start_index - goal_index) - (d+1)) == (d-1)){
             swap(start_index, goal_index);
