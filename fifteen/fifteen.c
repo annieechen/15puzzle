@@ -10,9 +10,6 @@
  *
  * whereby the board's dimensions are to be d x d,
  * where d must be in [DIM_MIN,DIM_MAX]
- *
- * Note that usleep is obsolete, but it offers more granularity than
- * sleep and is simpler to use than nanosleep; `man usleep` for more.
  */
  
 #define _XOPEN_SOURCE 500
@@ -49,7 +46,11 @@ void randomize(void);
 void swap(int start_index, int goal_index);
 int search(int tile);
 void god(void);
-
+int god_right(void);
+int god_left(void);
+int god_up(void);
+int god_down(void);
+int solve(int numSteps, int answer[32]);
 int main(int argc, string argv[])
 {
     // ensure proper usage
@@ -77,6 +78,7 @@ int main(int argc, string argv[])
 
     // initialize the board
     init();
+    
     // accept moves until game is won
     while (true)
     {
@@ -96,15 +98,37 @@ int main(int argc, string argv[])
         // prompt for move
         printf("Tile to move: ");
         int tile = GetInt();
-
-        // move if possible, else report illegality
-        if (!move(tile))
+        if(tile == 30)
         {
+            god();
+        }
+        
+        // move if possible, else report illegality
+        else if (!move(tile))
+        {
+        
             printf("\nIllegal move.\n");
             usleep(500000);
         }
-
+        /*
+        switch(tile)
+        {
+            case 1:
+                god_right();
+                break;
+            case 2:
+                god_left();
+                break;
+            case 3:
+                god_up();
+                break;
+            case 4:
+                god_down();
+                break;
+        }
+        */
         // sleep thread for animation's sake
+        
         usleep(500000);
     }
 
@@ -132,28 +156,18 @@ void greet(void)
 }
 
 /**
- * Initializes the game's board with tiles numbered 1 through d*d - 1
- * (i.e., fills 2D array with values but does not actually print them).  
+ * sets bottom right corner to 0, passes to randomize 
  */
 void init(void)
 {
-    // int counter = 1;
-    // for (int i = 0; i < d; i++)
-    // {
-    //     for (int j = 0; j < d; j++)
-    //     {
-    //         board[i][j] = counter;
-    //         counter++; 
-    //     }
-    // }
-    // // turn bottom right corner to blank
     board[d-1][d-1] = 0;
     // then pass to randomize
     randomize();
 }
 
 /**
- * swaps random tiles and then checks for solvability
+ * initializes random tiles and then checks for solvability
+ * if not solvable, swaps them
  */
 void randomize(void)
 {
@@ -217,45 +231,6 @@ void randomize(void)
         }
     }
 
-    // int row_start, col_start, row_goal, col_goal;
-    // for (int counter = total; counter > 0; counter--)
-    // {
-    //     int randt = (drand48() * total);
-    //     row_start = counter / d;
-    //     col_start = counter % d;
-    //     row_goal = randt / d;
-    //     col_goal = randt % d;
-    //     swap(row_start, col_start, row_goal, col_goal);
-    // }
-    // // turn bottom right corner to blank
-    // board[d-1][d-1] = 0;
-
-    // // turn 2 by 2 array into 1 dimensional array
-    // int flat_board[d * d];
-    // for (int i = 0; i < d; i++)
-    // {
-    //     for (int j = 0; j < d; j++)
-    //     {
-    //         flat_board [(i * d) + j]= board[i][j]; 
-    //     }
-    // }
-    // // count number of inversions
-    // // ignores last element in array (guaranteed to be 0)
-    // int inversions = 0;
-    // for (int i = 0; i < d * d; i++)
-    // {
-    //     int temp = flat_board[i];
-    //     for (int j = i + 1; j < d * d; j++)
-    //     {
-    //         if(flat_board[j] != 0)
-    //         {
-    //             if(temp > flat_board[j])
-    //             {
-    //                 inversions++;
-    //             }
-    //         }
-    //     }
-    // }
 }    
 /**
  * Prints the board in its current state.
@@ -414,7 +389,6 @@ void swap(int start_index, int goal_index){
 
 // NOTE: condensed search_row and search_col into one function that returns one int equal to (row * d) + column
 // This works because row, column < d for all valid positions
-// @Dennis: I actually think it might have made more sense to change variables on the heap, rather than always converting
 /**
  * Given an int value, searches array for that value
  * assumes that value is in the array (checked in move function)
@@ -435,74 +409,196 @@ int search(int tile)
     return ERROR;
 }
 
-/** solves the puzzle
+/** solves the puzzle, only for d = 3
  * uses information from 
  * http://larc.unt.edu/ian/pubs/saml.pdf
  * 
- * actually I think this ppt gives more detail
- * http://msemac.redwoods.edu/~darnold/math45/laproj/f09/bishopmadsen/SamLoydSlides.pdf
- * but says on pg 47 there is a configuration that cannot be solved
  */
 
 void god(void)
 {
-    // if n = 3 solve by brute force
-    // need a way to 
+    // save current board
+    int original[3][3];
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            original[i][j] = board[i][j];
+        }
+    }
+    // find path that would solve it
+    int answer[32];
+     printf("1");
+    int numSteps = solve(0, answer);
+    printf("1");
+    
+    // restore original global board
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            board[i][j] = original[i][j];
+        }
+    }
+    // execute found path
+    for (int i = 0; i < numSteps; i++)
+    {
+        move(answer[i]);
+        usleep(250000);
+        clear();
+        draw();
+    }
+    
+    
 }
+
+// finds path that would solve puzzle through brute force trying all the solutions
+int solve(int numSteps, int answer[32])
+{
+    int check;
+    int nCheck;
+    // see if can move right
+    if((check = god_right())!= ERROR)
+    {
+        // store the tile that was moved
+        answer[numSteps] = check;
+        
+        // if solved, return
+        if(won())
+        {
+            return numSteps + 1;
+        }
+        // call recursively to check if won
+        if((nCheck = solve(numSteps + 1, answer)))
+        {
+            return nCheck;
+        }
+        
+        // if this path didn't leave to being solved, move back left
+        god_left();
+    }
+    // see if can move left
+    if((check = god_left())!= ERROR)
+    {
+        // store the tile that was moved
+        answer[numSteps] = check;
+        
+        // if solved, return
+        if(won())
+        {
+            return numSteps + 1;
+        }
+        // call recursively to check if won
+        if((nCheck = solve(numSteps + 1, answer)))
+        {
+            return nCheck;
+        }
+        
+        // if this path didn't leave to being solved, move back right
+        god_right();
+    }
+    // see if can move up
+    if((check = god_up())!= ERROR)
+    {
+        // store the tile that was moved
+        answer[numSteps] = check;
+        
+        // if solved, return
+        if(won())
+        {
+            return numSteps + 1;
+        }
+        // call recursively to check if won
+        if((nCheck = solve(numSteps + 1, answer)))
+        {
+            return nCheck;
+        }
+        
+        // if this path didn't leave to being solved, move back down
+        god_down();
+    }    
+    // see if can move down
+    if((check = god_down())!= ERROR)
+    {
+        // store the tile that was moved
+        answer[numSteps] =  check;
+        
+        // if solved, return
+        if(won())
+        {
+            return numSteps + 1;
+        }
+        // call recursively to check if won
+        if((nCheck = solve(numSteps + 1, answer)))
+        {
+            return nCheck;
+        }
+        
+        // if this path didn't leave to being solved, move back up
+        god_down();
+    }
+    return ERROR;
+}
+
+
 // all god moves check if possible
 // moves blank to the right
-bool god_right(void)
+int god_right(void)
 {
     int blank_index= search(0);
     if ((blank_index % d) != (d - 1))
     {
+        int piece = search(blank_index + 1);
         swap(blank_index, (blank_index + 1));
-        return true;
+        return piece;
     }
     else
     {
-        return false;
+        return ERROR;
     }
 }
 // moves blank to the left
-bool god_left(void)
+int god_left(void)
 {
     int blank_index= search(0);
     if (blank_index % d != 0)
     {
+        int piece = search(blank_index - 1);
         swap(blank_index, (blank_index - 1));
-        return true;
+        return piece;
     }
     else
     {
-        return false;
+        return ERROR;
     }
 }
 // moves blank up
-bool god_up(void)
+int god_up(void)
 {
     int blank_index= search(0);
     if (blank_index > d)
     {
+        int piece = search(blank_index - d);
         swap(blank_index, (blank_index - d));
-        return true;
+        return piece;
     }
     else
     {
-        return false;
+        return ERROR;
     }
 }
 // moves blank down
-bool god_down(void)
+int god_down(void)
 {
     int blank_index= search(0);
     if ((blank_index / d) != (d - 1))
     {
+        int piece = search(blank_index + d);
         swap(blank_index, (blank_index + d));
-        return true;
+        return piece;
     }
     else
     {
-        return false;
+        return ERROR;
     }
 }
