@@ -48,7 +48,8 @@ bool won(void);
 void randomize(void);
 void swap(int start_index, int goal_index);
 int search(int tile);
-void god(void);
+
+void god(int numSteps , int answer[]);
 
 int main(int argc, string argv[])
 {
@@ -444,10 +445,118 @@ int search(int tile)
  * but says on pg 47 there is a configuration that cannot be solved
  */
 
-void god(void)
+void god(int numSteps , int answer[])
 {
-    // if n = 3 solve by brute force
-    // need a way to 
+    // finds path that would solve puzzle through brute force trying all the solutions
+    // shouldn't need more than 31 steps to get to solution
+    // so stop branch after level 32
+    if(numSteps  == 32)
+    {
+        return 0;
+    }
+    int check;
+    int nextCheck;
+    // see if can move up
+    if((check = god_up())!= ERROR)
+    {
+        // if this path doesn't move the tile that was just moved
+        // check if steps have been made to avoid negative indexing array
+        // always enter this on first step
+        if((numSteps == 0) || (check != answer[numSteps-1]))
+        {
+            // store the tile that was moved
+            answer[numSteps] = check;
+            move(check);
+            // if solved, return
+            if(won())
+            {
+                return numSteps + 1;
+            }
+            // call recursively down to 31 steps
+            if((nextCheck = solve(numSteps + 1, answer)))
+            {
+                return nextCheck;
+            }
+            
+            // if this path didn't leave to being solved, move back down
+            // (up a step in the tree)
+            move(check);
+        }
+    }    
+    
+    // see if can move down
+    if((check = god_down())!= ERROR)
+    {
+        // if this path doesn't move the tile that was just moved
+        // check if steps have been made to avoid negative indexing array
+        if((numSteps == 0) || (check != answer[numSteps-1]))
+        {
+            // store the tile that was moved
+            answer[numSteps] =  check;
+            move(check);
+            // if solved, return
+            if(won())
+            {
+                return numSteps + 1;
+            }
+            // call recursively to check if won
+            if((nextCheck = solve(numSteps + 1, answer)))
+            {
+                return nextCheck;
+            }
+        }
+        // if this path didn't leave to being solved, move back up
+        move(check);
+    }
+    // see if can move right
+    if((check = god_right())!= ERROR)
+    {
+        if((numSteps == 0) || (check != answer[numSteps-1]))
+        {
+            // store the tile that was moved
+            answer[numSteps] = check;
+            move(check);
+            
+            // if solved, return
+            if(won())
+            {
+                return numSteps + 1;
+            }
+            // call recursively to check if won
+            if((nextCheck = solve(numSteps + 1, answer)))
+            {
+                return nextCheck;
+            }
+            
+            // if this path didn't leave to being solved, move back left
+            move(check);
+        }    
+    }
+    // see if can move left
+    if((check = god_left())!= ERROR)
+    {
+        if((numSteps == 0) || (check != answer[numSteps-1]))
+        {
+        // store the tile that was moved
+        answer[numSteps] = check;
+        move(check);
+        // if solved, return
+        if(won())
+        {
+            return numSteps + 1;
+        }
+        // call recursively to check if won
+        if((nextCheck = solve(numSteps + 1, answer)))
+        {
+            return nextCheck;
+        }
+        
+        // if this path didn't leave to being solved, move back right
+        move(check);
+        }
+    }
+    return 0;
+}
 }
 // all god moves check if possible
 // moves blank to the right
